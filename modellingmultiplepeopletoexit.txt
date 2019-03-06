@@ -1,0 +1,69 @@
+While[currentPeoplePositions != {},
+  currentPeoplePositions = Position[PeopleMatrix, 1];
+  loop = Length[currentPeoplePositions] + 1;
+  For[ i = 1, i < loop, i++,
+   
+   currentPosition = currentPeoplePositions[[i]];
+   currentPositionx = currentPeoplePositions[[i]][[1]];
+   currentPositiony = currentPeoplePositions[[i]][[2]];
+   
+   nextpositions = { {currentPositionx + 1, 
+      currentPositiony}, {currentPositionx, 
+      currentPositiony + 1}, {currentPositionx, 
+      currentPositiony}, {currentPositionx - 1, 
+      currentPositiony}, {currentPositionx, currentPositiony - 1}};
+   
+   
+   distancetoend = (exit - #) & /@ nextpositions;
+   distancetoendvalues =  #[[1]] + #[[2]]  & /@ Abs[distancetoend];
+   countvalues = 
+    Table[Count[distancetoendvalues, distancetoendvalues[[i]]], {i, 1,
+       Length[distancetoendvalues]}];
+   
+   createProbMatrix[x_, n_] := Which[
+     x == Min[distancetoendvalues], 
+     probability = 0.9/countvalues[[n]], 
+     x == Max[distancetoendvalues], 
+     probability = 0.025/countvalues[[n]], 
+     x =!= Max[distancetoendvalues], 
+     probability = (0.075/countvalues[[n]])];
+   
+   probMatrix = 
+    Table[createProbMatrix[distancetoendvalues[[i]], i], {i, 1, 
+      Length[nextpositions]}];
+   
+   probMatrix =
+    Table[
+     If[nextpositions[[i]][[1]] < 1 || 
+       nextpositions[[i]][[1]] > boardSize || 
+       nextpositions[[i]][[2]] < 1 || 
+       nextpositions[[i]][[2]] > boardSize, probMatrix[[i]] = 0, 
+      probMatrix[[i]]], {i, 1, Length[nextpositions]}];
+   
+   Do[
+    If[probMatrix[[i]] > 0,
+     If[PeopleMatrix[[nextpositions[[i]][[1]]]][[nextpositions[[i]][[\
+2]]]] == 1, 
+      probMatrix[[i]] = 0;
+      ]
+     ], {i, 1, Length[nextpositions]}];
+   
+   
+   nextpos = RandomChoice[probMatrix -> nextpositions];
+   
+   setcurrentposition[x_, y_] := 
+    (PeopleMatrix[[x[[1]]]][[x[[2]]]] = 0   ;
+     PeopleMatrix[[y[[1]]]][[y[[2]]]] = 1 ; 
+     currentPosition = Position[PeopleMatrix, 1][[i]];);
+   
+   eliminateposition[x_] := PeopleMatrix[[x[[1]]]][[x[[2]]]] = 0  ;
+   
+   If[nextpos != exit,
+    setcurrentposition[currentPosition, nextpos], 
+    eliminateposition[currentPosition] ]
+   
+   ];
+  
+  AppendTo[results, MatrixPlot[PeopleMatrix]];
+  ];
+ListAnimate[results]
